@@ -6,25 +6,54 @@ DESCRIBE vgsales;
 
 SUMMARIZE vgsales;
 
-SELECT DISTINCT Platform FROM vgsales;
+SELECT * FROM vgsales;
 
-SELECT DISTINCT Genre FROM vgsales;
+-- observe platform details
+SELECT Platform, COUNT(*) AS Platform_Count
+FROM vgsales
+GROUP BY Platform;
 
-SELECT DISTINCT "Year" FROM vgsales ORDER BY "Year";
+-- observe genre details
+SELECT Genre, COUNT(*) AS Genre_Count 
+FROM vgsales 
+GROUP BY Genre;
+
+-- observe year details
+SELECT "Year", COUNT(*) AS Year_Count 
+FROM vgsales 
+GROUP BY "Year"
+ORDER BY Year_Count DESC;
+-- check if N/A values for year is null or string
 SELECT COUNT(*) AS Null_Year_Count FROM vgsales WHERE "Year" IS NULL;
 SELECT COUNT(*) AS NA_Year_Count FROM vgsales WHERE "Year" = 'N/A';
 
+-- Platform with most games in Rank <=10
+SELECT 
+    Platform,
+    COUNT(*) as Top_10_Games_Count
+FROM vgsales 
+WHERE Rank <= 10
+GROUP BY Platform
+ORDER BY Top_10_Games_Count DESC;
+
+-- Platform and genres with most games in Rank <=10
+SELECT 
+    Platform,
+    Genre,
+    COUNT(*) as Top_10_Games_Count
+FROM vgsales 
+WHERE Rank <= 10
+GROUP BY Platform, Genre
+ORDER BY Top_10_Games_Count DESC, Platform, Genre;
 
 -- Sales Performance by Genre
 SELECT 
     Genre,
     COUNT(*) as Total_Games,
-    AVG(Global_Sales) as Avg_Global_Sales,
-    SUM(Global_Sales) as Total_Global_Sales,
-    MAX(Global_Sales) as Max_Global_Sales,
-    ROUND(AVG(Global_Sales), 2) as Avg_Sales_Rounded
+    ROUND(AVG(Global_Sales), 2) as Avg_Global_Sales,
+    ROUND(SUM(Global_Sales), 2) as Total_Global_Sales,
+    ROUND(MAX(Global_Sales), 2) as Max_Global_Sales,
 FROM vgsales 
-WHERE Global_Sales > 0
 GROUP BY Genre 
 ORDER BY Total_Global_Sales DESC;
 
@@ -32,11 +61,10 @@ ORDER BY Total_Global_Sales DESC;
 SELECT 
     Platform,
     COUNT(*) as Total_Games,
-    AVG(Global_Sales) as Avg_Global_Sales,
-    SUM(Global_Sales) as Total_Global_Sales,
-    MAX(Global_Sales) as Max_Global_Sales
+    ROUND(AVG(Global_Sales), 2) as Avg_Global_Sales,
+    ROUND(SUM(Global_Sales), 2) as Total_Global_Sales,
+    ROUND(MAX(Global_Sales), 2) as Max_Global_Sales
 FROM vgsales 
-WHERE Global_Sales > 0
 GROUP BY Platform 
 ORDER BY Total_Global_Sales DESC;
 
@@ -45,12 +73,12 @@ SELECT
     Genre,
     Platform,
     COUNT(*) as Total_Games,
-    AVG(Global_Sales) as Avg_Global_Sales,
-    SUM(Global_Sales) as Total_Global_Sales
+    ROUND(AVG(Global_Sales), 2) as Avg_Global_Sales,
+    ROUND(SUM(Global_Sales), 2) as Total_Global_Sales,
+    ROUND(MAX(Global_Sales), 2) as Max_Global_Sales
 FROM vgsales 
-WHERE Global_Sales > 0
 GROUP BY Genre, Platform 
-HAVING COUNT(*) >= 5  -- Only combinations with at least 5 games
+-- HAVING COUNT(*) >= 1  -- Only combinations with at least 5 games
 ORDER BY Avg_Global_Sales DESC;
 
 --Top performing games by "Genre"
@@ -65,29 +93,43 @@ WHERE Global_Sales > 0
 ORDER BY Global_Sales DESC
 LIMIT 20;
 
---market trends over time
+--Performance by Year
 SELECT 
-    Year,
+    "Year",
     Genre,
     Platform,
     COUNT(*) as Games_Released,
-    AVG(Global_Sales) as Avg_Sales
+    ROUND(AVG(Global_Sales), 2) as Avg_Sales
 FROM vgsales 
-WHERE Year IS NOT NULL AND Global_Sales > 0
-GROUP BY Year, Genre, Platform
-ORDER BY Year DESC, Avg_Sales DESC;
+GROUP BY "Year", Genre, Platform
+ORDER BY "Year" DESC, Avg_Sales;
 
 --regional performance analysis
 SELECT 
     Genre,
     Platform,
-    AVG(NA_Sales) as Avg_NA_Sales,
-    AVG(EU_Sales) as Avg_EU_Sales,
-    AVG(JP_Sales) as Avg_JP_Sales,
-    AVG(Other_Sales) as Avg_Other_Sales,
-    AVG(Global_Sales) as Avg_Global_Sales
+    ROUND(SUM(Global_Sales), 2) as Total_Global_Sales,
+    ROUND(SUM(NA_Sales), 2) as Total_NA_Sales,
+    ROUND(SUM(NA_Sales)/SUM(Global_Sales), 2) as NA_Sales_Percentage,
+    ROUND(SUM(EU_Sales), 2) as Total_EU_Sales,
+    ROUND(SUM(EU_Sales)/SUM(Global_Sales), 2) as EU_Sales_Percentage,
+    ROUND(SUM(JP_Sales), 2) as Total_JP_Sales,
+    ROUND(SUM(JP_Sales)/SUM(Global_Sales), 2) as JP_Sales_Percentage,
+    ROUND(SUM(Other_Sales), 2) as Total_Other_Sales,
+    ROUND(SUM(Other_Sales)/SUM(Global_Sales), 2) as Other_Sales_Percentage
 FROM vgsales 
-WHERE Global_Sales > 0
+GROUP BY Genre, Platform
+ORDER BY Total_Global_Sales DESC;
+
+SELECT 
+    Genre,
+    Platform,
+    ROUND(AVG(NA_Sales), 2) as Avg_NA_Sales,
+    ROUND(AVG(EU_Sales), 2) as Avg_EU_Sales,
+    ROUND(AVG(JP_Sales), 2) as Avg_JP_Sales,
+    ROUND(AVG(Other_Sales), 2) as Avg_Other_Sales,
+    ROUND(AVG(Global_Sales), 2) as Avg_Global_Sales
+FROM vgsales 
 GROUP BY Genre, Platform
 ORDER BY Avg_Global_Sales DESC;
 
